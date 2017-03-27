@@ -8,6 +8,7 @@ app = Celery('github_hooks',
              backend=os.environ.get('CELERY_RESULT_BACKEND', 'redis'))
 app.conf.result_backend = url
 
+
 @app.task()
 def push(json):
     print(json)
