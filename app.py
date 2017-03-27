@@ -14,3 +14,8 @@ def hook():
         json = request.form.to_dict(flat=True)
     celery.tasks['github_hooks.' + event].delay(json=json)
     return "OK"
+
+
+@app.route('/', methods=['GET'])
+def root():
+    return "OK"
