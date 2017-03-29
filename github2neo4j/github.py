@@ -11,10 +11,11 @@ class GHSession(Session):
     """a Session wrapper for github api"""
     def __init__(self):
         install_intel_certs()
-        self.prefix_url = os.environ.get("HOOKS_GITHUB_URL") + "/api/v3"
+        self.hosted_url = os.environ.get("HOOKS_GITHUB_URL")
+        self.prefix_url = self.hosted_url + "/api/v3"
         super(GHSession, self).__init__()
         self.headers = {'Authorization': 'token ' + os.environ.get("HOOKS_GITHUB_TOKEN"),
-                        'User-Agent': 'Buildbot'}
+                        'User-Agent': 'Github_hooks'}
 
     def request(self, method, url, *args, **kwargs):
         url = self.prefix_url + url
@@ -69,21 +70,36 @@ class GHSession(Session):
                 return res.json()
         return None
 
+    def getSubModuleDetails(self, org, repo, path):
+        res = self.get("/repos/{org}/{repo}/contents/{path}".format(
+                       org=org, repo=repo, path=path))
+        if res.status_code == 200:
+            res = res.json()
+            git_url = res['git_url']
+            if git_url and git_url.startswith(self.hosted_url):
+                res['id'] = "/".join(res['git_url'].split("/")[-5:-3])
+            elif git_url is None:
+                res['id'] = res['submodule_git_url']
+            else:
+                res['id'] = git_url
+
+            return res
+
     def getRepoInfos(self, org, repo):
         bbtravis_yml = self.getContent(org, repo, ".bbtravis.yml", raw=True)
         gitmodules = self.getContent(org, repo, ".gitmodules", raw=True)
-        config = configparser.ConfigParser()
-        config.readfp(io.StringIO(gitmodules.replace(b"\t", b"").decode("utf8")))
         modules = []
-        for section in config.sections():
-            path = config.get(section, "path")
-            res = self.get("/repos/{org}/{repo}/contents/{path}".format(
-                           org=org, repo=repo, path=path))
-            if res.status_code == 200:
-                res = res.json()
-                modules.append(res)
+        if gitmodules is not None:
+            config = configparser.ConfigParser()
+            config.readfp(io.StringIO(gitmodules.replace(b"\t", b"").decode("utf8")))
+            for section in config.sections():
+                path = config.get(section, "path")
+                res = self.getSubModuleDetails(org, repo, path)
+                if res is not None:
+                    modules.append(res)
 
         return dict(
+            id=org + "/" + repo,
             user=org,
             name=repo,
             modules=modules,
@@ -106,3 +122,13 @@ class GHSession(Session):
 
             page += 1
         return ret_repos
+
+    def getAllReposForUser(self):
+        res = self.get("/user/orgs")
+        res.raise_for_status()
+        repos = []
+        orgs = res.json()
+        for org in orgs:
+            org = org['login']
+            repos.extend(self.getAllReposForOrg(org))
+        return repos
