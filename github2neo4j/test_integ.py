@@ -1,8 +1,8 @@
 import unittest
 
-from github2neo4j import DumpAllReposToNeo4j
+from github2neo4j import dumpAllReposToNeo4j
 
 
 @unittest.skip("test is too long")
 def test_DumpAllReposToNeo4j():
-    DumpAllReposToNeo4j()
+    dumpAllReposToNeo4j()

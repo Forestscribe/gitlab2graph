@@ -1,5 +1,4 @@
 from flask import Flask, request
-
 from github_hooks import app as celery
 
 app = Flask("github_hooks")
@@ -13,6 +12,12 @@ def hook():
     if json is None:
         json = request.form.to_dict(flat=True)
     celery.tasks['github_hooks.' + event].delay(json=json)
+    return "OK"
+
+
+@app.route('/scan_all', methods=['GET'])
+def scan_all():
+    celery.tasks['github_hooks.scan_all'].delay()
     return "OK"
 
 
