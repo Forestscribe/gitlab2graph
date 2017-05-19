@@ -1,22 +1,41 @@
-
 from urllib import parse
 
+from requests import Session
 
-# from pydgraph.client import DgraphClient
+from .certs import install_intel_certs
 
 
-class DGraphSession(object):
+class DGraphSession(Session):
+    """a Session wrapper for dgraph api"""
     def __init__(self, url):
-        url = parse.urlparse(url)
-        self.driver = DgraphClient.driver(url.hostname.split(":"))
+        install_intel_certs()
+        url = url.rstrip("/")
+        self.hosted_url = url
+        self.prefix_url = self.hosted_url
+        super(DGraphSession, self).__init__()
+
+    def request(self, method, url, *args, **kwargs):
+        url = self.prefix_url + url
+        res = super(DGraphSession, self).request(method, url, *args, **kwargs)
+        return res
+
+    def query(self, query, **format):
+        return self.post("/query", data=query.format(**format))
+
+    def insertFacts(self, facts):
+        return self.query(
+            "mutation { set {\n"
+            "{facts}"
+            "}}", facts="\n".join(facts))
 
     def insertGitHubModule(self, module):
-        _map = {}
+        facts = []
+
         for k, v in module.items():
             if k != "modules":
                 if isinstance(v, bytes):
                     v = v.decode("utf8")
-                _map[k] = v
+                facts.append('<{id}> <{k}> "{v}"'.format(id=module['id'], k=k, v=v))
         labels = ""
         if "bbtravis_yml" in module and module['bbtravis_yml'] is not None:
             labels += ":BBTravis"

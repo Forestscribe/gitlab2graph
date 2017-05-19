@@ -4,7 +4,7 @@ from neo4j.v1 import GraphDatabase, basic_auth
 
 class Neo4jSession(object):
     def __init__(self, url, auth):
-        self.driver = GraphDatabase.driver(url, auth=basic_auth(*auth))
+        self.driver = GraphDatabase.driver(url, auth=basic_auth(*auth), encrypted=False)
         self.session = self.driver.session()
 
     def insertGitHubModule(self, module):
