@@ -25,6 +25,11 @@ class Neo4jSession(object):
                        "id": module['id'],
                        "map": _map
                    })
+            # delete all relation from this module first
+            tx.run("MATCH (a:GithubModule {id: {id}})-[r:GITMODULE_INCLUDES]-()"
+                   "DELETE r",
+                   {"id": module['id']})
+
         for m in module['modules']:
             with self.session.begin_transaction() as tx:
                 tx.run("MERGE (a:GithubModule {id: {child_id}})", {
