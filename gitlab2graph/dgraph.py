@@ -1,7 +1,8 @@
 
 from urllib import parse
 
-from pydgraph.client import DgraphClient
+
+# from pydgraph.client import DgraphClient
 
 
 class DGraphSession(object):
