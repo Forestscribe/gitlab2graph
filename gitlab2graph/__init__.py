@@ -1,7 +1,8 @@
 import os
 from .github import GHSession
+from .gitlab import GLSession
 from .neo4j import Neo4jSession
-__all__ = ['GHSession', 'Neo4jSession']
+__all__ = ['GHSession', 'Neo4jSession', 'GLSession']
 
 
 def dumpOneRepoToNeo4j(org, repo):
@@ -19,11 +20,3 @@ def maybeCreateHook():
     for org in orgs:
         org = org['login']
         gh.maybeCreateHook(org, os.environ["HOOKS_ROOT_URL"] + "/github")
-
-
-def dumpAllReposToNeo4j():
-    gh = GHSession()
-    n = Neo4jSession()
-    for org, repo in gh.getAllReposForUser():
-        n.insertGitHubModule(
-            gh.getRepoInfos(org, repo))

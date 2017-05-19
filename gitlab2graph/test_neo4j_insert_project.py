@@ -1,6 +1,11 @@
-import github2neo4j
+import os
 
-s = github2neo4j.Neo4jSession()
+import gitlab2graph
+
+url = os.environ.get("NEO4J_URL")
+auth = os.environ.get("NEO4J_CREDS").split(":")
+
+s = gitlab2graph.Neo4jSession(url, auth)
 
 
 def test_insertGitHubModule():

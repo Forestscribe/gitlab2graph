@@ -1,13 +1,9 @@
-import copy
-import os
 
 from neo4j.v1 import GraphDatabase, basic_auth
 
 
 class Neo4jSession(object):
-    def __init__(self):
-        url = os.environ.get("NEO4J_URL")
-        auth = os.environ.get("NEO4J_CREDS").split(":")
+    def __init__(self, url, auth):
         self.driver = GraphDatabase.driver(url, auth=basic_auth(*auth))
         self.session = self.driver.session()
 

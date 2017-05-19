@@ -2,5 +2,13 @@
 url = "https://pypi.python.org/simple"
 verify_ssl = true
 
+[dev-packages]
+pytest = "*"
+
 [packages]
 nose = "*"
+requests = "*"
+neo4j-driver = "*"
+click = "*"
+bson = "*"
+configparser = "*"
